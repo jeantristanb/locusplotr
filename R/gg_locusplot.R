@@ -38,7 +38,7 @@
 #' gg_locusplot(df = fto_locus_df, lead_snp = "rs62033413", rsid = rsid, chrom = chromosome, pos = position, ref = effect_allele, alt = other_allele, p_value = p_value, plot_genes = TRUE)
 #' }
 #'
-gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = pos, ref = ref, alt = alt, effect = NULL, std_err = NULL, p_value = p_value, trait = NULL, plot_pvalue_threshold = 0.1, plot_subsample_prop = 0.25, plot_distance = 500000, genome_build = "GRCh37", population = "ALL", plot_genes = FALSE, plot_recombination = FALSE, plot_title = NULL, plot_subtitle = NULL, path = NULL) {
+gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = pos, ref = ref, alt = alt, effect = NULL, std_err = NULL, p_value = p_value, trait = NULL, plot_pvalue_threshold = 0.1, plot_subsample_prop = 0.25, plot_distance = 500000, genome_build = "GRCh37", population = "ALL", plot_genes = FALSE, plot_recombination = FALSE, plot_title = NULL, plot_subtitle = NULL, path = NULL,ld_extracted=NULL, gc_db=NULL, plot_gc=F) {
   # Check input arguments to ensure they are of the correct type and within reasonable ranges
   checkmate::assert_data_frame(df)
   # checkmate::assert_string(lead_snp)
@@ -119,9 +119,11 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
                      }))
 
   # Extract LD and format colors
-  possibly_ld_extract_locuszoom <- purrr::possibly(locusplotr::ld_extract_locuszoom, otherwise = NULL)
-
-  ld_extracted <- possibly_ld_extract_locuszoom(chrom = indep_snps$lead_chromosome, pos = indep_snps$lead_position, ref = indep_snps$lead_ref, alt = indep_snps$lead_alt, start = min(locus_snps$position), stop = max(locus_snps$position), genome_build = genome_build, population = population)
+  if(is.null(ld_extracted)){
+    possibly_ld_extract_locuszoom <- purrr::possibly(ld_extract_locuszoom, otherwise = NULL)
+    ld_extracted <- possibly_ld_extract_locuszoom(chrom = indep_snps$lead_chromosome, pos = indep_snps$lead_position, ref = indep_snps$lead_ref, alt = indep_snps$lead_alt, start = min(locus_snps$position), stop = max(locus_snps$position), genome_build = genome_build, population = population)
+  print(ld_extracted)
+  }
 
   # Create dataframe with variants at locus, LD information, color codes, and labels in preparation for plotting
   if (!(is.null(ld_extracted))) {
@@ -264,36 +266,32 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
     regional_assoc_plot <- gginnards::move_layers(regional_assoc_plot, "GeomLine", "bottom")
 
   }
-
+  blank_border<- labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5))
   # Add plot of genes if requested by user
+  regional_assoc_plot_f<-regional_assoc_plot
   if (plot_genes) {
     cli::cli_alert_info("Extracting genes for the region {indep_snps$lead_chromosome}:{indep_snps$lead_position - plot_distance/2}-{indep_snps$lead_position + plot_distance/2}")
-    geneplot <- gg_geneplot(chr = indep_snps$lead_chromosome, start = indep_snps$lead_position - plot_distance / 2, end = indep_snps$lead_position + plot_distance / 2, genome_build = genome_build) +
-      theme(plot.margin = margin(0, 5.5, 5.5, 5.5))
+    geneplot <- gg_geneplot(chr = indep_snps$lead_chromosome, start = indep_snps$lead_position - plot_distance / 2, end = indep_snps$lead_position + plot_distance / 2, genome_build = genome_build) + theme(plot.margin = margin(0, 5.5, 5.5, 5.5))
+    suppressWarnings(suppressMessages(regional_assoc_plot_f <- patchwork::wrap_plots(list(regional_assoc_plot +  labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5))
+, geneplot), nrow = 2, heights = c(3, 1))))
+  }
+  if(plot_gc){
+     cli::cli_alert_info("Extracting gwas catalog for the region {indep_snps$lead_chromosome}:{indep_snps$lead_position - plot_distance/2}-{indep_snps$lead_position + plot_distance/2}")
+    gc_plot<- gg_gc(chr = indep_snps$lead_chromosome, start = indep_snps$lead_position - plot_distance / 2, end = indep_snps$lead_position + plot_distance / 2, genome_build = genome_build,gwas_cat_db=gc_db) +  theme(plot.margin = margin(0, 5.5, 5.5, 5.5))
+    if(plot_genes)suppressWarnings(suppressMessages(regional_assoc_plot_f <- patchwork::wrap_plots(list(regional_assoc_plot +  labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5)), geneplot+labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5)),gc_plot), nrow = 3, heights = c(3, 1,1.5))))
+   
 
-    suppressWarnings(suppressMessages(regional_assoc_plot <- patchwork::wrap_plots(list(
-      regional_assoc_plot +
-        labs(x = "") +
-        xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +
-        theme(
-          axis.text.x = element_blank(),
-          axis.ticks.x = element_blank(),
-          axis.title.x = element_blank(),
-          plot.margin = margin(5.5, 5.5, 0, 5.5)
-        ),
-      geneplot
-    ), nrow = 2, heights = c(3, 1))))
   }
 
   # Return +/- save ggplot object
   if (!is.null(path)) {
-    ggsave(regional_assoc_plot, filename = paste0(path, stringr::str_replace_all(unique(indep_snps$lead_rsid), "[^[:alnum:]]", "_"), ".pdf"), units = "in", height = 8.5, width = 11, device = "pdf")
+    ggsave(regional_assoc_plot_f, filename = paste0(path, stringr::str_replace_all(unique(indep_snps$lead_rsid), "[^[:alnum:]]", "_"), ".pdf"), units = "in", height = 8.5, width = 11, device = "pdf")
   }
   # } else {
   #   ggsave(regional_assoc_plot, filename = paste0(path, stringr::str_replace_all(unique(indep_snps$lead_rsid), "[^[:alnum:]]", "_"), ".pdf"), units = "in", height = 8.5, width = 11, device = "pdf")
   #   return(regional_assoc_plot)
   # }
 
-  return(regional_assoc_plot)
+  return(regional_assoc_plot_f)
 }
 

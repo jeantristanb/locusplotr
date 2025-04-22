@@ -22,7 +22,7 @@
 #' }
 #'
 ld_extract_locuszoom <- function(chrom, pos, ref, alt, start, stop, genome_build = "GRCh37", population = "ALL", metric = "rsquare") {
-
+  require(ggplot2)
   # Check function arguments
   checkmate::assert_numeric(chrom)
   checkmate::assert_numeric(pos)
