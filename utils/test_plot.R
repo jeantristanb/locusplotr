@@ -37,7 +37,7 @@ bp=102136762
 
 gwassub<-gwas %>% filter(Chromosome == chr, Position>=bp-around, Position <= bp+around) 
 
-gc_db<-gc_db %>% mutate(rsid = SNPS , chro=as.integer(CHR_ID), bp=as.integer(CHR_POS), label=MAPPED_TRAIT) %>% select(rsid, chro,bp,label)%>%drop_na()
+gc_db<-gc_db %>% mutate(rsid = SNPS , chro=as.integer(CHR_ID), bp=as.integer(CHR_POS), label=MAPPED_TRAIT) %>% select(all_of(rsid, chro,bp,label))%>%drop_na()
 bfile='~/locuszoom2_test/chr13'
 
 

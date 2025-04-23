@@ -1,36 +1,40 @@
-#' Plot genes located within a genomic region of interest
+#' Plot gwas catalog located within a genomic region of interest
 #'
-#' Returns a ggplot containing the genes within a specified genomic region. The function uses database connections to EnsDb.Hsapiens.v75 (hg19/GRCh37) or EnsDb.Hsapiens.v86 (hg38/GRCh38) to identify genes within the specified region, and uses the ggbio package to create the plot.
+#' Returns a ggplot containing the gwas catalog within a specified genomic region. The function uses database gave by user or gwas catalog result compile on the library
 #'
 #' @param chr Integer - chromosome
 #' @param start Integer - starting position for region of interest
 #' @param end Integer - ending position for region of interest
 #' @param genome_build Character - genome build - one of "GRCh37" or "GRCh38"
-#' @param max_levels Integer - maximum number of levels for gene tracks
+#' @param gwas_cat_db data.frame - contained gwas catalog hit
 #'
-#' @return A ggplot object containing a plot of genes within the region of interest
+#' @return A ggplot object containing a plot of gwas catalog within the region of interest
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' gg_geneplot(1, 170054349 - 1e6, 170054349 + 1e6, "GRCh37")
+#' gg_gc(1, 170054349 - 1e6, 170054349 + 1e6, "GRCh38")
 #' }
 #'
 
 gg_gc<- function(chr, start, end, genome_build = "GRCh38", gwas_cat_db=NULL) {
-  #gwas_cat_db<-gc_db;chro<-chr;start<-rg[1]-500000;end<-rg[2]+500000
   checkmate::assert_numeric(chr)
   checkmate::assert_numeric(start)
   checkmate::assert_numeric(end)
+  checkmate::assert_data_frame(gwas_cat_db,null.ok=T)
   checkmate::assert_choice(genome_build, choices = c("GRCh37", "GRCh38"))
+
   # Select the appropriate gene table based on the genome version
-  #if (genome_build == "GRCh38") {
-  #  gene_table <- snpsettest::gene.curated.GRCh38
-  #} #else if (genome_build == "GRCh37") {
+  if (genome_build == "GRCh38" & is.null(gwas_cat_db)) {
+    gwas_cat_db<- gc_hg38
+  } #else if (genome_build == "GRCh37") {
     #gene_table <- snpsettest::gene.curated.GRCh37
   #} else {
   #  stop("Invalid genome version. Use 'GRCh37' or 'GRCh38'.")
   #}
+  if(is.null(gwas_cat_db)){
+  stop('gwas_cat_db is null ')
+  }
   chromosome <- chr
   filter_start <- start
   filter_end <- end
