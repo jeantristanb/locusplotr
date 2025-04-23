@@ -25,7 +25,13 @@ gg_locusplot(
   plot_recombination = FALSE,
   plot_title = NULL,
   plot_subtitle = NULL,
-  path = NULL
+  path = NULL,
+  ld_extracted = NULL,
+  gc_db = NULL,
+  plot_gc = F,
+  compute_ld = F,
+  plink = "plink",
+  bfile = bile
 )
 }
 \arguments{

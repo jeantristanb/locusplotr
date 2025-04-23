@@ -38,7 +38,7 @@
 #' gg_locusplot(df = fto_locus_df, lead_snp = "rs62033413", rsid = rsid, chrom = chromosome, pos = position, ref = effect_allele, alt = other_allele, p_value = p_value, plot_genes = TRUE)
 #' }
 #'
-gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = pos, ref = ref, alt = alt, effect = NULL, std_err = NULL, p_value = p_value, trait = NULL, plot_pvalue_threshold = 0.1, plot_subsample_prop = 0.25, plot_distance = 500000, genome_build = "GRCh37", population = "ALL", plot_genes = FALSE, plot_recombination = FALSE, plot_title = NULL, plot_subtitle = NULL, path = NULL,ld_extracted=NULL, gc_db=NULL, plot_gc=F) {
+gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = pos, ref = ref, alt = alt, effect = NULL, std_err = NULL, p_value = p_value, trait = NULL, plot_pvalue_threshold = 0.1, plot_subsample_prop = 0.25, plot_distance = 500000, genome_build = "GRCh37", population = "ALL", plot_genes = FALSE, plot_recombination = FALSE, plot_title = NULL, plot_subtitle = NULL, path = NULL,ld_extracted=NULL, gc_db=NULL, plot_gc=F, compute_ld=F,plink='plink',bfile=bile) {
   # Check input arguments to ensure they are of the correct type and within reasonable ranges
   checkmate::assert_data_frame(df)
   # checkmate::assert_string(lead_snp)
@@ -119,10 +119,17 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
                      }))
 
   # Extract LD and format colors
+  if(compute_ld==T){
+	 cli::cli_alert_info('using bfile to computed ld') 
+	  if(is.null(bfile)){
+	  stop("compute_ld is True but no bfile to compute ld")
+	  }
+	  ld_extracted<-ld_computed( indep_snps$lead_chromosome, indep_snps$lead_position, "","",start = min(locus_snps$position), stop = max(locus_snps$position), bfile,metric='r2',  plink=plink)
+
+  }
   if(is.null(ld_extracted)){
     possibly_ld_extract_locuszoom <- purrr::possibly(ld_extract_locuszoom, otherwise = NULL)
     ld_extracted <- possibly_ld_extract_locuszoom(chrom = indep_snps$lead_chromosome, pos = indep_snps$lead_position, ref = indep_snps$lead_ref, alt = indep_snps$lead_alt, start = min(locus_snps$position), stop = max(locus_snps$position), genome_build = genome_build, population = population)
-  print(ld_extracted)
   }
 
   # Create dataframe with variants at locus, LD information, color codes, and labels in preparation for plotting
@@ -283,8 +290,7 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
 
   }
 
-  # Return +/- save ggplot object
-  if (!is.null(path)) {
+ if(!is.null(path)){
     ggsave(regional_assoc_plot_f, filename = paste0(path, stringr::str_replace_all(unique(indep_snps$lead_rsid), "[^[:alnum:]]", "_"), ".pdf"), units = "in", height = 8.5, width = 11, device = "pdf")
   }
   # } else {

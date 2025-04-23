@@ -7,9 +7,12 @@ reference:
   contents:
   - gg_locusplot
   - gg_geneplot
+  - gg_gc
   - ld_extract_locuszoom
   - recomb_extract_locuszoom
+  - ld_computed
 
 - title: Sample Data
   contents:
   - fto_locus_df
+  - gc_hg38
