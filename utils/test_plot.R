@@ -1,16 +1,19 @@
 library(data.table)
+library(ggrepel)
 library(ggplot2)
+library(ggforce)
+library(grid)  # for arrow()
 #install.packages('gginnards')
 library(ggtext)
 library(dplyr)
 library(tidyr)
-source('ld_computed.R')
-source('ld_computed.R')
-source('gg_gc.R')
-source('gg_locusplot.R')
-source('gg_geneplot.R')
-source('recomb_extract_locuszoom.R')
-source('ld_extract_locuszoom.R')
+source('../R/ld_computed.R')
+source('../R/ld_computed.R')
+source('../R/gg_gc.R')
+source('../R/gg_locusplot.R')
+source('../R/gg_geneplot.R')
+source('../R/recomb_extract_locuszoom.R')
+source('../R/ld_extract_locuszoom.R')
 
 #source('ld_extract_locuszoom')
 #install.packages('snpsettest')
@@ -18,10 +21,11 @@ source('ld_extract_locuszoom.R')
 #ld<-fread('~/locuszoom2_test/plink.ld');ld<-ld[,c('SNP_A','CHR_A','BP_A','SNP_B','CHR_B','BP_B','R2')]
 #   variant1     chromosome1 position1 variant2 chromosome2 position2 correlation
 #names(ld)<-c('variant1','chromosome1','position1','variant2','chromosome2','position2', 'correlation')
-gwas<-fread("~/locuszoom2_test/summstats.sorted.tab.gz")
-rsid<-'MarkerName'
-pos<-'Position'
-chrom<-'Chromosome'
+gwas<-fread("../../locusplotr_test/all.tsv")
+#SNP	chrom	pos	rsid	
+rsid<-'rsid'
+pos<-'pos'
+chrom<-'chrom'
 ref<-'Allele1'
 alt<-'Allele2'
 effect='Effect'
@@ -35,9 +39,10 @@ bp=102136762
 #rg<-range(c(ld[ld[['chromosome1']]==chr,'position1'], ld[ld[['chromosome2']]==chr,'position2']))
 #gwassub<-gwas %>% filter(Chromosome == chr, Position>=rg[1]-around, Position <= rg[2]+around) 
 
-gwassub<-gwas %>% filter(Chromosome == chr, Position>=bp-around, Position <= bp+around) 
+gwassub<-gwas %>% filter(chrom == chr, pos >=bp-around, pos <= bp+around) 
 
-gc_db<-gc_db %>% mutate(rsid = SNPS , chro=as.integer(CHR_ID), bp=as.integer(CHR_POS), label=MAPPED_TRAIT) %>% select(all_of(rsid, chro,bp,label))%>%drop_na()
+gc_db<-fread('../../locusplotr_test/alternative')
+gc_db<-gc_db %>% mutate(rsid = SNPS , chro=as.integer(CHR_ID), bp=as.integer(CHR_POS), label=MAPPED_TRAIT) %>% select(rsid, chro,bp,label)%>%drop_na()
 bfile='~/locuszoom2_test/chr13'
 
 
