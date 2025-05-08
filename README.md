@@ -33,6 +33,10 @@ You can install `locusplotr` from [GitHub](https://github.com/):
 devtools::install_github("mglev1n/locusplotr")
 ```
 
+## News 
+ * Use your own LD with adding a bfile and plink1.9 or giving a ld files
+ * gwas catalog result are added, with a dataset provide or using GHR38
+
 ## Usage
 
 Start with a dataframe containing genome wide association study summary

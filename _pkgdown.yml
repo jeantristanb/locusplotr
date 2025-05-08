@@ -16,3 +16,4 @@ reference:
   contents:
   - fto_locus_df
   - gc_hg38
+  - gc_hg37
