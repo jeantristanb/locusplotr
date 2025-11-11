@@ -30,8 +30,8 @@ gg_gc<- function(chr, start, end, genome_build = "GRCh38", gwas_cat_db=NULL) {
   } else if (genome_build == "GRCh37") {
     gwas_cat_db<- gc_hg37
   } else {
-  #  stop("Invalid genome version. Use 'GRCh37' or 'GRCh38'.")
-  #}
+    stop("Invalid genome version. Use 'GRCh37' or 'GRCh38'.")
+  }
   if(is.null(gwas_cat_db)){
   stop('gwas_cat_db is null ')
   }
