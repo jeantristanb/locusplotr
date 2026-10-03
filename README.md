@@ -30,7 +30,7 @@ You can install `locusplotr` from [GitHub](https://github.com/):
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("mglev1n/locusplotr")
+devtools::install_github("jeantristanb/locusplotr")
 ```
 
 ## News 
