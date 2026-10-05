@@ -2,7 +2,7 @@
 #'
 #' Returns a ggplot containing the genes within a specified genomic region. The function uses database connections to EnsDb.Hsapiens.v75 (hg19/GRCh37) or EnsDb.Hsapiens.v86 (hg38/GRCh38) to identify genes within the specified region, and uses the ggbio package to create the plot.
 #'
-#' @param chr Integer - chromosome
+#' @param chr_id Integer - chromosome
 #' @param start Integer - starting position for region of interest
 #' @param end Integer - ending position for region of interest
 #' @param genome_build Character - genome build - one of "GRCh37" or "GRCh38"
@@ -17,8 +17,8 @@
 #' }
 #'
 
-gg_geneplot <- function(chr, start, end, genome_build = "GRCh38", max_levels = 5) {
-  checkmate::assert_numeric(chr)
+gg_geneplot <- function(chr_id, start, end, genome_build = "GRCh38", max_levels = 5) {
+  checkmate::assert_numeric(chr_id)
   checkmate::assert_numeric(start)
   checkmate::assert_numeric(end)
   checkmate::assert_choice(genome_build, choices = c("GRCh37", "GRCh38"))
@@ -30,16 +30,20 @@ gg_geneplot <- function(chr, start, end, genome_build = "GRCh38", max_levels = 5
   } else {
     stop("Invalid genome version. Use 'GRCh37' or 'GRCh38'.")
   }
-  chromosome <- chr
+  chromosome <- chr_id
   filter_start <- start
   filter_end <- end
   # Filter genes within the specified region
-  if(chr==23)chr=='X'
+  if(chr_id==23){
+      chromosome=='X'
+      chr_id='X'
+   }
   genes <- gene_table %>%
     filter(chr == chromosome,
            start <= filter_end,
            end >= filter_start) %>%
     select(gene = gene.name, start, end, strand)
+  print(genes)
 
   # Trim genes that extend beyond the specified region
   genes <- genes %>%
@@ -65,7 +69,7 @@ gg_geneplot <- function(chr, start, end, genome_build = "GRCh38", max_levels = 5
                        labels = scales::label_number(scale = 1 / 1e6),
                        limits = c(start, end)) +
     scale_y_continuous(expand = expansion(mult = c(0.2, 0.3))) +
-    labs(x = glue::glue("Position on Chromosome {chr} (Mb)"),
+    labs(x = glue::glue("Position on Chromosome {chr_id} (Mb)"),
          y = "") +
     theme_bw(base_size = 16) +
     theme(axis.ticks.y = element_blank(),

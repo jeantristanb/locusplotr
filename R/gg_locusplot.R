@@ -285,8 +285,7 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
     cli::cli_alert_info("Extracting genes for the region {indep_snps$lead_chromosome}:{indep_snps$lead_position - plot_distance/2}-{indep_snps$lead_position + plot_distance/2}")
     cat(indep_snps$lead_chromosome)
     geneplot <- gg_geneplot(chr = indep_snps$lead_chromosome, start = indep_snps$lead_position - plot_distance / 2, end = indep_snps$lead_position + plot_distance / 2, genome_build = genome_build) + theme(plot.margin = margin(0, 5.5, 5.5, 5.5))
-     
-    suppressWarnings(suppressMessages(regional_assoc_plot_f <- patchwork::wrap_plots(list(regional_assoc_plot +  labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5))
+    if(!is.null(geneplot))suppressWarnings(suppressMessages(regional_assoc_plot_f <- patchwork::wrap_plots(list(regional_assoc_plot +  labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5))
 , geneplot), nrow = 2, heights = c(3, 1))))
   }
   if(plot_gc){
