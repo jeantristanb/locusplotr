@@ -125,6 +125,11 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
 	  stop("compute_ld is True but no bfile to compute ld")
 	  }
 	  ld_extracted<-ld_computed( indep_snps$lead_chromosome, indep_snps$lead_position, "","",start = min(locus_snps$position), stop = max(locus_snps$position), bfile,metric='r2',  plink=plink)
+          if(is.null(ld_extracted)){
+               cat('eroor when computed LD ', indep_snps$lead_chromosome, indep_snps$lead_position,'\n')
+               exit()
+           }
+         print(head(ld_extracted))     
 
   }
   if(is.null(ld_extracted)){
@@ -137,7 +142,7 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
     # Join GWAS locus df with LD information
     locus_snps_ld <- ld_extracted %>%
       select(chromosome = chromosome2, position = position2, variant2, correlation) %>%
-      mutate(chromosome = as.numeric(chromosome), position = as.numeric(position)) %>%
+      mutate(chromosome = as.integer(chromosome), position = as.numeric(position)) %>%
       tidyr::separate(variant2, into = c("chr_pos", "ref_alt"), sep = "_") %>%
       tidyr::separate(ref_alt, into = c("ref", "alt"), sep = "/") %>%
       right_join(locus_snps, by = c("chromosome" = "chromosome", "position" = "position"), relationship = "many-to-many") %>%
@@ -278,7 +283,9 @@ gg_locusplot <- function(df, lead_snp = NULL, rsid = rsid, chrom = chrom, pos = 
   regional_assoc_plot_f<-regional_assoc_plot
   if (plot_genes) {
     cli::cli_alert_info("Extracting genes for the region {indep_snps$lead_chromosome}:{indep_snps$lead_position - plot_distance/2}-{indep_snps$lead_position + plot_distance/2}")
+    cat(indep_snps$lead_chromosome)
     geneplot <- gg_geneplot(chr = indep_snps$lead_chromosome, start = indep_snps$lead_position - plot_distance / 2, end = indep_snps$lead_position + plot_distance / 2, genome_build = genome_build) + theme(plot.margin = margin(0, 5.5, 5.5, 5.5))
+     
     suppressWarnings(suppressMessages(regional_assoc_plot_f <- patchwork::wrap_plots(list(regional_assoc_plot +  labs(x = "") + xlim(indep_snps$lead_position - plot_distance / 2, indep_snps$lead_position + plot_distance / 2) +theme(axis.text.x = element_blank(),axis.ticks.x = element_blank(),axis.title.x = element_blank(),plot.margin = margin(5.5, 5.5, 0, 5.5))
 , geneplot), nrow = 2, heights = c(3, 1))))
   }

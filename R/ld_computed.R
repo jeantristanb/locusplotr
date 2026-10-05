@@ -22,6 +22,19 @@
 #' }
 #'
 
+plink_chr_to_chr <- function(x) {
+  x <- as.character(x)
+
+  case_when(
+    x %in% as.character(1:22) ~ x,
+    x == "23" ~ "X",
+    x == "24" ~ "Y",
+    x == "25" ~ "XY",
+    x == "26" ~ "MT",
+    TRUE ~ NA_character_
+  )
+}
+
 run_plink <-function(plink,args, outf=NULL){
 	 suppressWarnings(
            out<- system2(command = normalizePath(plink),args = args,stdout = TRUE,stderr = TRUE)
@@ -53,6 +66,16 @@ ld_computed <- function(chrom, pos, ref, alt, start, stop, bfile,beddata=NULL,me
 	 tmpdir=tempdir()
 	 filebed=paste(tmpdir,'/',chrom,'_',start,'_',stop,'.pos.bed',sep='')
 	 bfiletmp=paste(tmpdir,'/',chrom,'_',start,'_',stop,'',sep='')
+chrom <- case_when(
+  chrom %in% as.character(1:22) ~ as.integer(chrom),
+  chrom %in% c("23", "X", "x", "chrX", "chrx") ~ 23L,
+  chrom %in% c("24", "Y", "y", "chrY", "chry") ~ 24L,
+  chrom %in% c("25", "XY", "xy", "chrXY", "chrxy") ~ 25L,
+  chrom %in% c(
+    "26", "MT", "mt", "M", "m", "chrM", "chrMT", "chrmt"
+  ) ~ 26L,
+  TRUE ~ NA_integer_
+)
          if(is.null(beddata))writeLines(paste(chrom,start,stop,start,sep='\t'),con=filebed)
 	 else write.table(beddata[,c(1,2,3,2)], sep='\t',quote=F, row.names=F,col.names=F,file=filebed)
 	 args=paste("-bfile ",bfile, '--extract range ',filebed,' --make-bed --keep-allele-order -out ',bfiletmp, sep=' ')
@@ -71,7 +94,8 @@ ld_computed <- function(chrom, pos, ref, alt, start, stop, bfile,beddata=NULL,me
 	 args_ld<-paste("-bfile ",bfiletmp,' -out ', bfiletmp, ' --ld-snp ', rsid,' --ld-window-r2 ',0,'--ld-window-kb 100000','--ld-window 99999 --r2')
          out_ld<-run_plink(plink,args_ld, paste(bfiletmp,'.ld',sep=''))
 	 ld<-read.table(paste(bfiletmp,'.ld',sep=''),header=T);
-	 ld<-ld[,c('SNP_A','CHR_A','BP_A','SNP_B','CHR_B','BP_B','R2')];names(ld)<-c('variant1','chromosome1','position1','variant2','chromosome2','position2', 'correlation')
+	 ld<-ld[,c('SNP_A','CHR_A','BP_A','SNP_B','CHR_B','BP_B','R2')]
+         names(ld)<-c('variant1','chromosome1','position1','variant2','chromosome2','position2', 'correlation')
 	 return(ld)
 }
 

@@ -34,6 +34,7 @@ gg_geneplot <- function(chr, start, end, genome_build = "GRCh38", max_levels = 5
   filter_start <- start
   filter_end <- end
   # Filter genes within the specified region
+  if(chr==23)chr=='X'
   genes <- gene_table %>%
     filter(chr == chromosome,
            start <= filter_end,
